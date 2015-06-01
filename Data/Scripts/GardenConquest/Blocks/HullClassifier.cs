@@ -1,8 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 
+using Sandbox.Common.ObjectBuilders;
+using Sandbox.Common.Components;
 using Sandbox.ModAPI;
 using Ingame = Sandbox.ModAPI.Ingame;
+using VRage.Components;
+using VRage.ObjectBuilders;
 
 using GardenConquest.Records;
 using GardenConquest.Core;
@@ -12,11 +16,17 @@ namespace GardenConquest.Blocks {
 	/// <summary>
 	/// Helper methods for Classifier Blocks
 	/// </summary>
-	public class HullClassifier {
+    [MyEntityComponentDescriptor(typeof(MyObjectBuilder_Beacon), 
+        "GCUnlicensedHullClassifier", "GCWorkerHullClassifier", "GCFoundryHullClassifier",
+        "GCScoutHullClassifier", "GCFighterHullClassifier", "GCGunshipHullClassifier", 
+        "GCCorvetteHullClassifier", "GCFrigateHullClassifier", "GCDestroyerHullClassifier", 
+        "GCCruiserHullClassifier", "GCHeavyCruiserHullClassifier", "GCBattleshipHullClassifier", 
+        "GCOutpostHullClassifier", "GCInstallationHullClassifier", "GCFortressHullClassifier")]
+    public class HullClassifier : MyGameLogicComponent {
 
 		#region Static
 
-		private const String SHARED_SUBTYPE = "HullClassifier";
+		//private const String SHARED_SUBTYPE = "HullClassifier";
 		public readonly static String[] SUBTYPES_IN_CLASS_ORDER = {
 			"Unclassified",
 			"Unlicensed",
@@ -58,6 +68,7 @@ namespace GardenConquest.Blocks {
 			return HullClass.CLASS.UNCLASSIFIED;
 		}
 
+        /*
 		/// <summary>
 		/// If we recognize the block's subtype as belonging to a classifier, return true
 		/// </summary>
@@ -71,6 +82,8 @@ namespace GardenConquest.Blocks {
 
 			return false;
 		}
+        */
+
 
 		private static void log(String message, String method = null, 
 			Logger.severity level = Logger.severity.DEBUG) {
@@ -83,19 +96,96 @@ namespace GardenConquest.Blocks {
 		#endregion
 		#region instance
 
-		String m_SubTypeName;
+        private String m_SubTypeName;
+        private GridEnforcer m_Enforcer;
+        private IMyCubeBlock m_CubeBlock;
+        private IMySlimBlock m_SlimBlock;
 
-		public IMySlimBlock SlimBlock { get; private set; }
-		public IMyCubeBlock FatBlock { get; private set; }
-		public HullClass.CLASS Class { get; private set; }
+        public HullClass.CLASS HullClass { get; private set; }
 
-		public HullClassifier(IMySlimBlock block) {
-			SlimBlock = block;
-			FatBlock = block.FatBlock;
-			m_SubTypeName = FatBlock.BlockDefinition.SubtypeName;
-			Class = HullClassFromSubTypeString(m_SubTypeName);
+        /*
+		public HullClassifier(IMySlimBlock block, GridEnforcer ge) {
+
 		}
+         * */
 
 		#endregion
-	}
+        #region Component Hooks
+
+        public override void Init(MyObjectBuilder_EntityBase objectBuilder) {
+            base.Init(objectBuilder);
+
+            m_SlimBlock = Container.Entity as IMySlimBlock;
+            m_SubtypeName = FatBlock.BlockDefinition.SubtypeName;
+            HullClass = HullClassFromSubTypeString(m_SubTypeName);
+            Enforcer = ge;
+
+
+            m_MergeBlock = Container.Entity as InGame.IMyShipMergeBlock;
+            //m_Grid = m_MergeBlock.CubeGrid as IMyCubeGrid;
+
+            m_Logger = new Logger(m_MergeBlock.EntityId.ToString(), "MergeBlock");
+            log("Attached to merge block", "Init");
+
+            (m_MergeBlock as IMyShipMergeBlock).BeforeMerge += beforeMerge;
+        }
+
+        public override void Close() {
+            log("Merge block closing", "Close");
+            (m_MergeBlock as IMyShipMergeBlock).BeforeMerge -= beforeMerge;
+        }
+
+        public override void Init(MyObjectBuilder_EntityBase objectBuilder) {
+            base.Init(objectBuilder);
+            m_Grid = Container.Entity as IMyCubeGrid;
+
+            m_Logger = new Logger(m_Grid.EntityId.ToString(), "GridEnforcer");
+            log("Loaded into new grid", "Init");
+
+            // If this is not the server we don't need this class.
+            // When we modify the grid on the server the changes should be
+            // sent to all clients
+            try {
+                m_IsServer = Utility.isServer();
+                log("Is server: " + m_IsServer, "Init");
+                if (!m_IsServer) {
+                    // No cleverness allowed :[
+                    log("Disabled.  Not server.", "Init");
+                    m_Logger = null;
+                    m_Grid = null;
+                    return;
+                }
+            }
+            catch (NullReferenceException e) {
+                log("Exception.  Multiplayer is not initialized.  Assuming server for time being: " + e,
+                    "Init");
+                // If we get an exception because Multiplayer was null (WHY KEEN???)
+                // assume we are the server for a little while and check again later
+                m_IsServer = true;
+                m_CheckServerLater = true;
+            }
+
+            // We need to only turn on our rule checking after startup. Otherwise, if
+            // a beacon is destroyed and then the server restarts, all but the first
+            // 25 blocks will be deleted on startup.
+            m_Grid.NeedsUpdate |= MyEntityUpdateEnum.EACH_100TH_FRAME;
+
+            m_BlockCount = 0;
+            m_BlockTypeCounts = new int[s_Settings.BlockTypes.Length];
+            m_Owner = new GridOwner(this);
+            m_Classifiers = new Dictionary<long, HullClassifier>();
+            m_Projectors = new Dictionary<long, InGame.IMyProjector>();
+
+            setReservedToDefault();
+            setEffectiveToDefault();
+            //log("setClassification" + m_IsServer, "Init");
+            m_Owner.setClassification(m_EffectiveClass);
+            //log("end setClassification" + m_IsServer, "Init");
+
+            m_Grid.OnBlockAdded += blockAdded;
+            m_Grid.OnBlockRemoved += blockRemoved;
+            m_Grid.OnBlockOwnershipChanged += blockOwnerChanged;
+            m_GridSubscribed = true;
+        }
+    }
 }
