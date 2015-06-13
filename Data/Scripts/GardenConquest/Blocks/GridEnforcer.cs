@@ -308,6 +308,12 @@ namespace GardenConquest.Blocks {
 					m_Merging = false;
 				}
 
+				// check for failed derelict timers
+				if (m_CleanupTimer != null) {
+					m_CleanupTimer.updateTimeRemaining();
+				}
+
+
 				if (m_CleanupTimer != null && m_CleanupTimer.TimerExpired) {
 					log("timer expired, running cleanup", "UpdateBeforeSimulation100");
 
