@@ -489,7 +489,7 @@ namespace GardenConquest.Blocks {
 
 				// load up the classifier helper object
 				HullClassifier classifier = new HullClassifier(block);
-				HullClass.CLASS classID = classifier.HullClass;
+				HullClass.CLASS classID = classifier.Class;
 				log("Adding a classifier for class " + classID + " - " +
 					s_Settings.HullRules[(int)classID].DisplayName,
 					"updateClassificationWith");
@@ -497,7 +497,7 @@ namespace GardenConquest.Blocks {
 				addClassifier(classifier);
 
 				// Ensure it's the right type for this grid
-				if (s_Settings.HullRules[(int)classifier.HullClass].ShouldBeStation && !m_Grid.IsStatic) {
+				if (s_Settings.HullRules[(int)classifier.Class].ShouldBeStation && !m_Grid.IsStatic) {
 					return VIOLATION_TYPE.SHOULD_BE_STATIC;
 				}
 
@@ -692,7 +692,7 @@ namespace GardenConquest.Blocks {
 		}
 
 		private void setReservedToClassifier() {
-			m_ReservedClass = m_Classifier.HullClass;
+			m_ReservedClass = m_Classifier.Class;
 			m_ReservedRules = s_Settings.HullRules[(int)m_ReservedClass];
 			log("Reserved class changed to" + m_ReservedRules.DisplayName, "setReservedToClassifier");
 		}
@@ -804,7 +804,7 @@ namespace GardenConquest.Blocks {
 			foreach (KeyValuePair<long, HullClassifier> pair in m_Classifiers) {
 				current = pair.Value;
 				currentIsWorking = current.FatBlock.IsWorking;
-				currentClass = current.HullClass;
+				currentClass = current.Class;
 				currentIsSupported = checkClassAllowed(currentClass);
 
 				if (bestFound == null) {
@@ -849,78 +849,15 @@ namespace GardenConquest.Blocks {
 			return bestFound;
 		}
 
-        private HullClassifier findWorstClassifiers(uint numToFind) {
-            HullClassifier bestFound = null;
-            bool bestFoundIsWorking = false;
-            bool bestFoundIsSupported = false;
-            HullClass.CLASS bestFoundClass = HullClass.CLASS.UNCLASSIFIED;
-
-            HullClassifier current;
-            bool currentIsWorking;
-            bool currentIsSupported;
-            HullClass.CLASS currentClass;
-
-            foreach (KeyValuePair<long, HullClassifier> pair in m_Classifiers) {
-                current = pair.Value;
-                currentIsWorking = current.FatBlock.IsWorking;
-                currentClass = current.HullClass;
-                currentIsSupported = checkClassAllowed(currentClass);
-
-                if (bestFound == null) {
-                    goto better;
+        private void detatchClassifiers() {
+            if (m_Classifiers != null) {
+                foreach (KeyValuePair<long, HullClassifier> pair in m_Classifiers) {
+                    pair.Value.FatBlock.IsWorkingChanged -= classifierWorkingChanged;
                 }
-
-                // Always prefer a working classifier
-                if (!bestFoundIsWorking && currentIsWorking) {
-                    goto better;
-                }
-                else if (bestFoundIsWorking && !currentIsWorking) {
-                    goto worse;
-                }
-
-                // Then prefer a supported classifier
-                if (!bestFoundIsSupported && currentIsSupported) {
-                    goto better;
-                }
-                else if (bestFoundIsSupported && !currentIsSupported) {
-                    goto worse;
-                }
-
-                // Then prefer a higher level class
-                if (bestFoundClass < currentClass) {
-                    goto better;
-                }
-                else if (bestFoundClass > currentClass) {
-                    goto worse;
-                }
-
-                // Tie
-                log("Tie", "reevaluateBestClassifier");
-                goto worse;
-
-            better:
-                bestFound = current;
-                bestFoundIsWorking = currentIsWorking;
-                bestFoundIsSupported = currentIsSupported;
-                bestFoundClass = currentClass;
-                continue;
-            worse:
-                continue;
+                m_Classifiers = null;
             }
-
-            return bestFound;
+            m_Classifier = null;
         }
-
-
-		private void detatchClassifiers() {
-			if (m_Classifiers != null) {
-				foreach (KeyValuePair<long, HullClassifier> pair in m_Classifiers) {
-					pair.Value.FatBlock.IsWorkingChanged -= classifierWorkingChanged;
-				}
-				m_Classifiers = null;
-			}
-			m_Classifier = null;
-		}
 
 		private void removeExtraClassifiers(int removeCount = 100) {
 			// Supposedly we've only added the best classifier up to now,
@@ -932,20 +869,46 @@ namespace GardenConquest.Blocks {
 				return;
 			}
 
-			List<IMySlimBlock> allBlocks = new List<IMySlimBlock>();
-			m_Grid.GetBlocks(allBlocks);
-			foreach (IMySlimBlock block in allBlocks) {
-				if (removeCount > 0) {
-					if (HullClassifier.isClassifierBlock(block) &&
-						!block.Equals(Classifier.SlimBlock)) {
-						removeBlock(block);
-						removeCount--;
-					}
-				} else {
-					return;
-				}
-			}
+            List<HullClassifier> worstClassifiers = findWorstClassifiers(1);
+            foreach (HullClassifier classifier in worstClassifiers) {
+                removeBlock(classifier.SlimBlock);
+            }
 		}
+
+        /// <summary>
+        /// Find the worst classifiers so we can remove them instead of better ones
+        /// </summary>
+        /// <remarks>
+        /// This is really dumb, just randomly picks some we aren't directly using.
+        /// Making this simpler, and making findBestClassifiers simpler, would be
+        /// best done by interfacing IComparable with Hull Classifiers.
+        /// The cleanest way to do that would be making Hull Classifiers a logic component
+        /// so we can track isWorking there and make sure it's closed when they are
+        /// This would require the ge to be able to find the HullClassifier component on
+        /// an added beacon, which seems like it might be possible, but also might not
+        /// </remarks>
+        private List<HullClassifier> findWorstClassifiers(uint removeCount = 0) {
+            List<HullClassifier> worstClassifiers = new List<HullClassifier>();
+            uint worstClassifiersCount = 0;
+            long currentClassifierID = m_Classifier.FatBlock.EntityId;
+
+            foreach (KeyValuePair<long, HullClassifier> pair in m_Classifiers) {
+                if (pair.Key == currentClassifierID)
+                    continue;
+
+                if (removeCount > worstClassifiersCount) {
+                    worstClassifiers.Add(pair.Value);
+                    worstClassifiersCount++;
+                }
+            }
+
+            return worstClassifiers;
+        }
+
+        private void classifierWorkingChanged(IMyCubeBlock b) {
+            log("Working: " + b.IsWorking, "classifierWorkingChanged");
+            m_CheckClassifierNextUpdate = true;
+        }
 
 		#endregion
 		#region Ownership & Fleet
@@ -1374,14 +1337,6 @@ namespace GardenConquest.Blocks {
 				cancelCleanupTimer(false);
 				m_CleanupTimer = null;
 			}
-		}
-
-		#endregion
-		#region SE Hooks - Classifier Working
-
-		private void classifierWorkingChanged(IMyCubeBlock b) {
-            log("Working: " + b.IsWorking, "classifierWorkingChanged");
-            m_CheckClassifierNextUpdate = true;
 		}
 
 		#endregion
