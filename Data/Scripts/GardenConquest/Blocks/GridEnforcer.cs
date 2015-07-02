@@ -489,7 +489,7 @@ namespace GardenConquest.Blocks {
 
 				// load up the classifier helper object
 				HullClassifier classifier = new HullClassifier(block);
-				HullClass.CLASS classID = classifier.Class;
+				HullClass.CLASS classID = classifier.HullClass;
 				log("Adding a classifier for class " + classID + " - " +
 					s_Settings.HullRules[(int)classID].DisplayName,
 					"updateClassificationWith");
@@ -497,7 +497,7 @@ namespace GardenConquest.Blocks {
 				addClassifier(classifier);
 
 				// Ensure it's the right type for this grid
-				if (s_Settings.HullRules[(int)classifier.Class].ShouldBeStation && !m_Grid.IsStatic) {
+				if (s_Settings.HullRules[(int)classifier.HullClass].ShouldBeStation && !m_Grid.IsStatic) {
 					return VIOLATION_TYPE.SHOULD_BE_STATIC;
 				}
 
@@ -692,7 +692,7 @@ namespace GardenConquest.Blocks {
 		}
 
 		private void setReservedToClassifier() {
-			m_ReservedClass = m_Classifier.Class;
+			m_ReservedClass = m_Classifier.HullClass;
 			m_ReservedRules = s_Settings.HullRules[(int)m_ReservedClass];
 			log("Reserved class changed to" + m_ReservedRules.DisplayName, "setReservedToClassifier");
 		}
@@ -736,7 +736,6 @@ namespace GardenConquest.Blocks {
 			}
 
 			m_Classifiers.Add(classifier.FatBlock.EntityId, classifier);
-			classifier.FatBlock.IsWorkingChanged += classifierWorkingChanged;
 			m_CheckClassifierNextUpdate = true;
 		}
 
@@ -805,7 +804,7 @@ namespace GardenConquest.Blocks {
 			foreach (KeyValuePair<long, HullClassifier> pair in m_Classifiers) {
 				current = pair.Value;
 				currentIsWorking = current.FatBlock.IsWorking;
-				currentClass = current.Class;
+				currentClass = current.HullClass;
 				currentIsSupported = checkClassAllowed(currentClass);
 
 				if (bestFound == null) {
@@ -849,6 +848,68 @@ namespace GardenConquest.Blocks {
 
 			return bestFound;
 		}
+
+        private HullClassifier findWorstClassifiers(uint numToFind) {
+            HullClassifier bestFound = null;
+            bool bestFoundIsWorking = false;
+            bool bestFoundIsSupported = false;
+            HullClass.CLASS bestFoundClass = HullClass.CLASS.UNCLASSIFIED;
+
+            HullClassifier current;
+            bool currentIsWorking;
+            bool currentIsSupported;
+            HullClass.CLASS currentClass;
+
+            foreach (KeyValuePair<long, HullClassifier> pair in m_Classifiers) {
+                current = pair.Value;
+                currentIsWorking = current.FatBlock.IsWorking;
+                currentClass = current.HullClass;
+                currentIsSupported = checkClassAllowed(currentClass);
+
+                if (bestFound == null) {
+                    goto better;
+                }
+
+                // Always prefer a working classifier
+                if (!bestFoundIsWorking && currentIsWorking) {
+                    goto better;
+                }
+                else if (bestFoundIsWorking && !currentIsWorking) {
+                    goto worse;
+                }
+
+                // Then prefer a supported classifier
+                if (!bestFoundIsSupported && currentIsSupported) {
+                    goto better;
+                }
+                else if (bestFoundIsSupported && !currentIsSupported) {
+                    goto worse;
+                }
+
+                // Then prefer a higher level class
+                if (bestFoundClass < currentClass) {
+                    goto better;
+                }
+                else if (bestFoundClass > currentClass) {
+                    goto worse;
+                }
+
+                // Tie
+                log("Tie", "reevaluateBestClassifier");
+                goto worse;
+
+            better:
+                bestFound = current;
+                bestFoundIsWorking = currentIsWorking;
+                bestFoundIsSupported = currentIsSupported;
+                bestFoundClass = currentClass;
+                continue;
+            worse:
+                continue;
+            }
+
+            return bestFound;
+        }
 
 
 		private void detatchClassifiers() {
