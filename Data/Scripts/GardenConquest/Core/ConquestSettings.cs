@@ -583,7 +583,7 @@ namespace GardenConquest.Core {
 				MaxPerSoloPlayer = 0,
 				CaptureMultiplier = 4,
 				MaxBlocks = 600,
-                BlockTypeLimits = new int[7] {
+				BlockTypeLimits = new int[7] {
 					//40,  // Conveyors
 					//1,   // Gravity
 					5,     // Industrial
