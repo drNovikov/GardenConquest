@@ -99,7 +99,7 @@
         <Component Subtype="LargeTube" Count="40" />
         <Component Subtype="Computer" Count="8" />
         <Component Subtype="RadioCommunication" Count="40" />
-        <Component Subtype="ShipLicense" Count="30" />
+        <Component Subtype="ShipLicense" Count="65" />
         <Component Subtype="Construction" Count="10" />
         <Component Subtype="SteelPlate" Count="40" />
       </Components>
@@ -138,7 +138,7 @@
         <Component Subtype="Construction" Count="1" />
         <Component Subtype="SmallTube" Count="1" />
         <Component Subtype="Computer" Count="1" />
-        <Component Subtype="ShipLicense" Count="20" />
+        <Component Subtype="ShipLicense" Count="25" />
         <Component Subtype="SteelPlate" Count="1" />
       </Components>
       <CriticalComponent Subtype="ShipLicense" Index="0" />
@@ -173,7 +173,7 @@
         <Component Subtype="LargeTube" Count="40" />
         <Component Subtype="Computer" Count="8" />
         <Component Subtype="RadioCommunication" Count="165" />
-        <Component Subtype="ShipLicense" Count="540" />
+        <Component Subtype="ShipLicense" Count="215" />
         <Component Subtype="Construction" Count="10" />
         <Component Subtype="SteelPlate" Count="40" />
       </Components>
@@ -281,7 +281,7 @@
         <Component Subtype="Construction" Count="1" />
         <Component Subtype="SmallTube" Count="1" />
         <Component Subtype="Computer" Count="1" />
-        <Component Subtype="ShipLicense" Count="50" />
+        <Component Subtype="ShipLicense" Count="35" />
         <Component Subtype="SteelPlate" Count="1" />
       </Components>
       <CriticalComponent Subtype="ShipLicense" Index="0" />
@@ -320,7 +320,7 @@
         <Component Subtype="LargeTube" Count="40" />
         <Component Subtype="Computer" Count="8" />
         <Component Subtype="RadioCommunication" Count="40" />
-        <Component Subtype="ShipLicense" Count="80" />
+        <Component Subtype="ShipLicense" Count="55" />
         <Component Subtype="Construction" Count="10" />
         <Component Subtype="SteelPlate" Count="40" />
       </Components>
@@ -363,7 +363,7 @@
         <Component Subtype="LargeTube" Count="40" />
         <Component Subtype="Computer" Count="8" />
         <Component Subtype="RadioCommunication" Count="40" />
-        <Component Subtype="ShipLicense" Count="185" />
+        <Component Subtype="ShipLicense" Count="125" />
         <Component Subtype="Construction" Count="10" />
         <Component Subtype="SteelPlate" Count="40" />
       </Components>
@@ -406,7 +406,7 @@
         <Component Subtype="LargeTube" Count="40" />
         <Component Subtype="Computer" Count="8" />
         <Component Subtype="RadioCommunication" Count="40" />
-        <Component Subtype="ShipLicense" Count="355" />
+        <Component Subtype="ShipLicense" Count="305" />
         <Component Subtype="Construction" Count="10" />
         <Component Subtype="SteelPlate" Count="40" />
       </Components>
@@ -449,7 +449,7 @@
         <Component Subtype="LargeTube" Count="40" />
         <Component Subtype="Computer" Count="8" />
         <Component Subtype="RadioCommunication" Count="40" />
-        <Component Subtype="ShipLicense" Count="530" />
+        <Component Subtype="ShipLicense" Count="455" />
         <Component Subtype="Construction" Count="10" />
         <Component Subtype="SteelPlate" Count="40" />
       </Components>
@@ -492,7 +492,7 @@
         <Component Subtype="LargeTube" Count="40" />
         <Component Subtype="Computer" Count="8" />
         <Component Subtype="RadioCommunication" Count="40" />
-        <Component Subtype="ShipLicense" Count="770" />
+        <Component Subtype="ShipLicense" Count="670" />
         <Component Subtype="Construction" Count="10" />
         <Component Subtype="SteelPlate" Count="40" />
       </Components>
@@ -535,7 +535,7 @@
         <Component Subtype="LargeTube" Count="40" />
         <Component Subtype="Computer" Count="8" />
         <Component Subtype="RadioCommunication" Count="40" />
-        <Component Subtype="ShipLicense" Count="1105" />
+        <Component Subtype="ShipLicense" Count="980" />
         <Component Subtype="Construction" Count="10" />
         <Component Subtype="SteelPlate" Count="40" />
       </Components>
@@ -582,7 +582,7 @@
         <Component Subtype="LargeTube" Count="40" />
         <Component Subtype="Computer" Count="8" />
         <Component Subtype="RadioCommunication" Count="40" />
-        <Component Subtype="ShipLicense" Count="110" />
+        <Component Subtype="ShipLicense" Count="75" />
         <Component Subtype="Construction" Count="10" />
         <Component Subtype="SteelPlate" Count="40" />
       </Components>
@@ -625,7 +625,7 @@
         <Component Subtype="LargeTube" Count="40" />
         <Component Subtype="Computer" Count="8" />
         <Component Subtype="RadioCommunication" Count="40" />
-        <Component Subtype="ShipLicense" Count="370" />
+        <Component Subtype="ShipLicense" Count="170" />
         <Component Subtype="Construction" Count="10" />
         <Component Subtype="SteelPlate" Count="40" />
       </Components>
@@ -668,7 +668,7 @@
         <Component Subtype="LargeTube" Count="40" />
         <Component Subtype="Computer" Count="8" />
         <Component Subtype="RadioCommunication" Count="40" />
-        <Component Subtype="ShipLicense" Count="690" />
+        <Component Subtype="ShipLicense" Count="255" />
         <Component Subtype="Construction" Count="10" />
         <Component Subtype="SteelPlate" Count="40" />
       </Components>
